@@ -1,0 +1,1 @@
+# Models for myproject are imported from messaging app

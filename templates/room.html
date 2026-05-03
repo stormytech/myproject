@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial;
+        background: #ece5dd;
+      }
+      
+      .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+      }
+      
+      .header {
+        background: #075e54;
+        color: white;
+        padding: 15px;
+        font-weight: bold;
+      }
+      
+      .messages {
+        flex: 1;
+        padding: 10px;
+        overflow-y: scroll;
+      }
+      
+      .message {
+        max-width: 60%;
+        padding: 10px;
+        margin: 5px;
+        border-radius: 10px;
+      }
+      
+      .sent {
+        background: #dcf8c6;
+        margin-left: auto;
+      }
+      
+      .received {
+        background: white;
+        margin-right: auto;
+      }
+      
+      .input-box {
+        display: flex;
+        padding: 10px;
+        background: #f0f0f0;
+      }
+      
+      input {
+        flex: 1;
+        padding: 10px;
+      }
+      
+      button {
+        padding: 10px;
+        background: #075e54;
+        color: white;
+        border: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="chat-container">
+      <div class="header">{{ receiver.username }}</div>
+
+      <div class="messages" id="messages">
+        {% for msg in messages %}
+          <div class="message {% if msg.sender == request.user %}
+              
+              sent
+
+            {% else %}
+              
+              received
+
+            {% endif %}">{{ msg.content }}</div>
+        {% endfor %}
+      </div>
+
+      <div class="input-box">
+        <input id="messageInput" placeholder="Type a message" />
+        <button onclick="sendMessage()">Send</button>
+      </div>
+    </div>
+    <div class="header">{{ receiver.username }} (online)</div>
+
+    <script>
+      const username = '{{ request.user.username }}'
+      const receiver = '{{ receiver.username }}'
+      const roomName = [username, receiver].sort().join('_')
+      
+      const socket = new WebSocket('ws://' + window.location.host + '/ws/chat/' + roomName + '/')
+      
+      socket.onmessage = function (e) {
+        const data = JSON.parse(e.data)
+        const div = document.createElement('div')
+        div.classList.add('message', 'sent')
+        div.innerText = data.message
+        document.getElementById('messages').appendChild(div)
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight
+      }
+      
+      function sendMessage() {
+        const input = document.getElementById('messageInput')
+      
+        socket.send(
+          JSON.stringify({
+            message: input.value,
+            sender: username,
+            receiver: receiver
+          })
+        )
+      
+        input.value = ''
+      }
+      document.getElementById('messageInput').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+          sendMessage()
+        }
+      })
+    </script>
+  </body>
+</html>

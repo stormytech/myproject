@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+
+<h2>WhatsApp Clone</h2>
+
+<input id="messageInput" type="text">
+<button onclick="sendMessage()">Send</button>
+
+<ul id="messages"></ul>
+
+<h2>Select User</h2>
+
+{% for user in users %}
+    <p><a href="/chat/{{ user.username }}/">{{ user.username }}</a></p>
+{% endfor %}
+
+<a href="/logout/">Logout</a>
+
+<script>
+    const socket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/room1/'
+    );
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const li = document.createElement('li');
+        li.textContent = data.message;
+        document.querySelector('#messages').appendChild(li);
+    };
+
+    function sendMessage() {
+        const input = document.getElementById('messageInput');
+        socket.send(JSON.stringify({
+            'message': input.value
+        }));
+        input.value = '';
+    }
+</script>
+
+</body>
+</html>
